@@ -27,23 +27,33 @@ FetchContent_Declare(
   GIT_TAG        v3.4.0 # or a later release
 )
 
-FetchContent_MakeAvailable(Catch2)
-include(Catch)
-
 # --- Make stdexec available ---------------------------------------------------
+FetchContent_Declare(
+  STDEXEC
+  GIT_REPOSITORY https://github.com/NVIDIA/stdexec.git
+  GIT_TAG        main
+)
 set(STDEXEC_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(STDEXEC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-add_subdirectory(stdexec)
-include_directories(stdexec/include)
 
 # --- Make libevent available --------------------------------------------------
+FetchContent_Declare(
+  libevent
+  GIT_REPOSITORY https://github.com/libevent/libevent.git
+  GIT_TAG        release-2.1.12-stable
+)
 
-add_subdirectory(libevent)
+FetchContent_MakeAvailable(Catch2 STDEXEC libevent)
+include(Catch)
+
 
 # --- stdnet -------------------------------------------------------------------
-include_directories(include)
-add_compile_options(-Wno-deprecated-declarations)
+add_library(stdnet INTERFACE)
+add_library(stdnet::stdnet ALIAS stdnet)
+target_include_directories(stdnet INTERFACE include)
+target_compile_options(stdnet INTERFACE -Wno-deprecated-declarations)
+target_link_libraries(stdnet INTERFACE STDEXEC::stdexec event_core_shared)
 set(CMAKE_CXX_STANDARD 23)
 
 list(APPEND stdnet_examples
@@ -59,7 +69,7 @@ list(APPEND xstdnet_examples
 )
 foreach(example ${stdnet_examples})
     add_executable(${example} examples/${example}.cpp)
-    target_link_libraries(${example} STDEXEC::stdexec event_core_shared)
+    target_link_libraries(${example} stdnet)
 endforeach()
 
 list (APPEND stdnet_tests
@@ -78,8 +88,7 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
         CXX_EXTENSIONS OFF
     )
     target_link_libraries(test_stdnet
-        STDEXEC::stdexec
-        event_core_shared
+        stdnet
         Catch2::Catch2WithMain
     )
     catch_discover_tests(test_stdnet)
