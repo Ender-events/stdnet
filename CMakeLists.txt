@@ -31,7 +31,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   STDEXEC
   GIT_REPOSITORY https://github.com/NVIDIA/stdexec.git
-  GIT_TAG        main
+  GIT_TAG        nvhpc-24.09
 )
 set(STDEXEC_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(STDEXEC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
